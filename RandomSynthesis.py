@@ -43,7 +43,8 @@ def main():
     Random_seed = 3
     times = 0
     end_time = 10
-    percent = 0.05
+    percent = 1.0
+    ZP_len = 0.2 #목표 음성의 20% 내 random 
 
     rand.seed( Random_seed )
 
@@ -72,7 +73,7 @@ def main():
                     speech_angle = Angle
        
                     # 사람소리, 드론소리가 담긴 폴더의 wav파일중 한가지 선택
-                    Speech_file_list = os.listdir(Speech_Path+speech_class[0]+"/"+speech_class[0]+str(speech_angle))
+                    Speech_file_list = os.listdir(Speech_Path+speech_class[0]+"/"+speech_class[0]+speech_angle)
                     Speech_file = [file for file in Speech_file_list if file.endswith(".wav")]
                     
                     speech_name = rand.sample(Speech_file,1)
@@ -82,13 +83,21 @@ def main():
                     drone_name = rand.sample(Drone_file,1)
 
                     #선택된 wav파일 load
-                    x_target, fs = sf.read(Speech_Path+speech_class[0]+"/"+speech_class[0]+str(speech_angle)+"/"+speech_name[0])
+                    x_target, fs = sf.read(Speech_Path+speech_class[0]+"/"+speech_class[0]+speech_angle+"/"+speech_name[0])
                     x_drone, fs = sf.read(Drone_Path+drone_class[0]+"/"+drone_name[0])
             
+                    #x_target 좌우 random zero padding
+                    rp_zp_s = rand.randrange(0,int(x_target.shape[0]*ZP_len))
+                    rp_zp_e = rand.randrange(0,int(x_target.shape[0]*ZP_len))
+                    x_zp_s = np.zeros((rp_zp_s,x_target.shape[1]))
+                    x_zp_e = np.zeros((rp_zp_e,x_target.shape[1]))
+                    x_concat = np.concatenate((x_zp_s, x_target, x_zp_e),axis=0)
+                    x_target = x_concat
+
                     #드론소리의 랜덤부분과 합친소리를 합치고 파일생성
-                    randomslice = rand.randrange(0,len(x_drone[:,0])-len(x_target[:,0]))
+                    randomslice = rand.randrange(0,x_drone.shape[0]-x_target.shape[0])
                     x_target = x_target * Gain
-                    x_drone = x_drone[randomslice:randomslice+len(x_target[:,0]),:]
+                    x_drone = x_drone[randomslice:randomslice+x_target.shape[0],:]
                     x_mix = x_target + x_drone
                     
                     #File Write
@@ -114,12 +123,12 @@ def main():
                     speech_angle = Angle
         
                     #방해소리, 사람소리, 드론소리가 담긴 폴더의 wav파일중 한가지 선택
-                    DS_file_list = os.listdir(Interf_Path+random_Interf[0]+"/"+random_Interf[0]+str(random_InterfA))
+                    DS_file_list = os.listdir(Interf_Path+random_Interf[0]+"/"+random_Interf[0]+random_InterfA[0])
                     DS_file = [file for file in DS_file_list if file.endswith(".wav")]
                         
                     random_InterfN = rand.sample(DS_file,1)
 
-                    Speech_file_list = os.listdir(Speech_Path+speech_class[0]+"/"+speech_class[0]+str(speech_angle))
+                    Speech_file_list = os.listdir(Speech_Path+speech_class[0]+"/"+speech_class[0]+speech_angle)
                     Speech_file = [file for file in Speech_file_list if file.endswith(".wav")]
                         
                     speech_name = rand.sample(Speech_file,1)
@@ -129,40 +138,50 @@ def main():
                     drone_name = rand.sample(Drone_file,1)
 
                     #선택된 wav파일 load
-                    x_interf, fs = sf.read(Interf_Path+random_Interf[0]+"/"+random_Interf[0]+str(random_InterfA)+"/"+random_InterfN[0])
-                    x_target, fs = sf.read(Speech_Path+speech_class[0]+"/"+speech_class[0]+str(speech_angle)+"/"+speech_name[0])
-                    x_drone, fs = sf.read(Drone_Path+drone_class[0]+"/"+str(drone_name)+".wav")
+                    x_interf, fs = sf.read(Interf_Path+random_Interf[0]+"/"+random_Interf[0]+random_InterfA[0]+"/"+random_InterfN[0])
+                    x_target, fs = sf.read(Speech_Path+speech_class[0]+"/"+speech_class[0]+speech_angle+"/"+speech_name[0])
+                    x_drone, fs = sf.read(Drone_Path+drone_class[0]+"/"+drone_name[0])
                     
+                    #x_target 좌우 random zero padding
+                    rp_zp_s = rand.randrange(0,int(x_target.shape[0]*ZP_len))
+                    rp_zp_e = rand.randrange(0,int(x_target.shape[0]*ZP_len))
+                    x_zp_s = np.zeros((rp_zp_s,x_target.shape[1]))
+                    x_zp_e = np.zeros((rp_zp_e,x_target.shape[1]))
+                    x_concat = np.concatenate((x_zp_s, x_target, x_zp_e),axis=0)
+                    x_target = x_concat
+
                     #방해소리와 사람소리를 합치고 파일생성
-                    if len(x_interf[:,0]) >= len(x_target[:,0]):
-                        x_long = x_interf
-                        x_short = x_target
-                        gain_long = random_percent
-                        gain_short = Gain
+                    if x_interf.shape[0] >= x_target.shape[0]:
+                        x_long = x_interf * random_percent
+                        x_short = x_target * Gain
                     else:
-                        x_long = x_target
-                        x_short = x_interf
-                        gain_long = Gain
-                        gain_short = random_percent
+                        x_long = x_target * Gain
+                        x_short = x_interf * random_percent
                     
-                    x_zeros = np.zeros((len(x_short[:,0]), len(x_short[:,0])))
-                    x_concat = np.concatenate((x_zeros,x_long,x_zeros),axis=1)
-                    rp = rand.randrange(len(x_short[:,0]),len(x_concat[:,0])-len(x_short[:,0]))
-                    
-                    x_mix =  gain_long * x_concat[:,rp:rp+len(x_short[:,0])] + gain_short * x_short
-                    if np.max(np.abs(x_mix)) > 1.0:
-                        x_mix = x_mix / np.max(np.abs(x_mix))
-                    
+                    x_zeros = np.zeros(x_short.shape)
+                    x_concat = np.concatenate((x_zeros,x_long,x_zeros),axis=0)
+                    x_sd = np.copy(x_concat)
+                    rp = rand.randrange(x_short.shape[0],x_concat.shape[0]-x_short.shape[0])
+                    x_sd[rp:rp+x_short.shape[0],:] =  x_concat[rp:rp+x_short.shape[0],:] + x_short
+
+                    if x_interf.shape[0] >= x_target.shape[0]:
+                        x_target_rev = x_sd - x_concat
+                    else:
+                        x_target_rev = x_concat
+
+                    if np.max(np.abs(x_sd)) > 1.0:
+                        x_sd /= np.max(np.abs(x_sd))
+                        x_target_rev /= np.max(np.abs(x_sd))
                     #드론소리의 랜덤부분과 합친소리를 합치고 파일생성 
                     # print(len(x_drone) - len(x_com))
                     # import pdb; pdb.set_trace()
-                    randomslice2 = rand.randrange(0,len(x_drone[:,0])-len(x_mix[:,0]))
-                    x_drone = x_drone[randomslice2:randomslice2+len(x_mix[:,0]),:]
-                    x_mix = x_mix + x_drone
+                    randomslice2 = rand.randrange(0,x_drone.shape[0]-x_sd.shape[0])
+                    x_drone = x_drone[randomslice2:randomslice2+x_sd.shape[0],:]
+                    x_mix = x_sd + x_drone
 
                     #File Write
-                    sf.write(Mix_Path+"clean/{}_{}_{}_{}_{}.wav".format(Dist_Name[Gain],speech_class[0],speech_name[0][:-4],speech_angle[1:],drone_name[0][:-4]),x_target*Gain,Samplerate,"PCM_16")
-                    sf.write(Mix_Path+"noise/{}_{}_{}_{}_{}.wav".format(Dist_Name[Gain],speech_class[0],speech_name[0][:-4],speech_angle[1:],drone_name[0][:-4]),x_mix-x_target*Gain,Samplerate,"PCM_16")
+                    sf.write(Mix_Path+"clean/{}_{}_{}_{}_{}.wav".format(Dist_Name[Gain],speech_class[0],speech_name[0][:-4],speech_angle[1:],drone_name[0][:-4]),x_target_rev,Samplerate,"PCM_16")
+                    sf.write(Mix_Path+"noise/{}_{}_{}_{}_{}.wav".format(Dist_Name[Gain],speech_class[0],speech_name[0][:-4],speech_angle[1:],drone_name[0][:-4]),x_mix-x_target_rev,Samplerate,"PCM_16")
                     sf.write(Mix_Path+"mix/{}_{}_{}_{}_{}.wav".format(Dist_Name[Gain],speech_class[0],speech_name[0][:-4],speech_angle[1:],drone_name[0][:-4]),x_mix,Samplerate,"PCM_16")
 
                     time = np.arange(len(x_mix))/float(Samplerate)

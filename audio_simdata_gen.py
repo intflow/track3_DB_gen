@@ -4,21 +4,16 @@ import random as rand
 import numpy as np
 import librosa
 import glob
-#import sys
-#import json
-#from pydub import AudioSegment
 
 #Global Parameters   
 Angles = ["_0","_20","_40","_60","_80","_100","_120","_140","_160","_180"] #소리의 각도(폴더명)
-
-Samplerate = 48000
-SNR_List = [1, 0.5, 0.25] #거리
+Samplerate = 48000 #GC2019 track3 기준
+SNR_List = [1, 0.5, 0.25] #5m 기준 거리감쇄, 5m, 10m, 20m, GC track3 기준
 Dist_Name = {1 : '5m', 0.5 :'10m', 0.25 : '20m'}
-
-RAND_SEED = 5
-TOTAL_TIME = 180 #총 DB 길이
-INTERF_PERCENT = 0.2 #간섭음 Mixing 빈도
-ZP_LEN = 0.2 #목표 음성의 20% 내 random 
+RAND_SEED = 5 #동일시간에 다른 simdata를 생성 시 변경
+TOTAL_TIME = 18000 #총 DB 길이 #second 단위, 전체 simdata 길이 근사치 산출
+INTERF_PERCENT = 0.2 #간섭음 Mixing 빈도, 높일수록 음원에 간섭음이 자주 발생함
+ZP_LEN = 0.2 #목표 음성의 20% 내 random silence 생성
 
 def main():
     

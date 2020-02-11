@@ -14,18 +14,13 @@ vad.set_mode(3)
 sample_rate = 48000
 samples_per_window = 480
 bytes_per_sample = 2
-min_len_frm = 15
-energy_thr = 100
 
 #name of sim data folder
-DB_NAME = 'simdata_S5T180'
+DB_NAME = 'simdata_S5T18000'
 VAD_PATH = '../simdata/'+DB_NAME+'/vad/'
 
 if os.path.isdir(VAD_PATH) == False:
-    os.mkdir(VAD_PATH)
-
-#Tail noise to correct VAD bug
-fs, x_tail = wavfile.read('tail_noise.wav')
+	os.mkdir(VAD_PATH)
 
 file_cnt = 0
 power_ratio = []

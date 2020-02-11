@@ -17,7 +17,7 @@ BIN_E = 1025
 power_ratio = []
 if os.path.isdir(SUB_PATH) == False:
 	os.mkdir(SUB_PATH)
-for fname in glob.glob(r'./*.wav', recursive=False):
+for fname in glob.glob(r'./*/*.wav', recursive=False):
 	print(fname)
 
 	fs, x_speech = wavfile.read(fname)
@@ -37,4 +37,4 @@ for fname in glob.glob(r'./*.wav', recursive=False):
 		x_out[:,ch] = x_tmp[:x_out.shape[0]]
 	
 	x_out = np.clip(x_out, -32768, 32767)
-	wavfile.write(SUB_PATH+'/'+fname,fs,x_out)
+	wavfile.write(fname,fs,x_out)

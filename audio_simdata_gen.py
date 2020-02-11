@@ -15,17 +15,17 @@ Samplerate = 48000
 SNR_List = [1, 0.5, 0.25] #거리
 Dist_Name = {1 : '5m', 0.5 :'10m', 0.25 : '20m'}
 
-RAND_SEED = 3
-TOTAL_TIME = 10 #총 DB 길이
-INTERF_PERCENT = 0.1 #간섭음 Mixing 빈도
+RAND_SEED = 5
+TOTAL_TIME = 180 #총 DB 길이
+INTERF_PERCENT = 0.2 #간섭음 Mixing 빈도
 ZP_LEN = 0.2 #목표 음성의 20% 내 random 
 
 def main():
     
-    Interf_Path = "../sony/Aroom/interf/"              #방해소리경로
-    Speech_Path = "../sony/Aroom/speech/"              #사람소리경로
-    Drone_Path = "../sony/Drone/"             #드론소리경로
-    Mix_Path = "../sony/simdata_"+"S"+str(RAND_SEED)+"T"+str(TOTAL_TIME)+"/"  #합친소리경로
+    Interf_Path = "../DB3_Aroom/sony_A10/interf/"              #방해소리경로
+    Speech_Path = "../DB3_Aroom/sony_A10/speech/"              #사람소리경로
+    Drone_Path = "../DB1_drone/sony_A10/"             #드론소리경로
+    Mix_Path = "../simdata/simdata_"+"S"+str(RAND_SEED)+"T"+str(TOTAL_TIME)+"/"  #합친소리경로
 
     if os.path.isdir(Mix_Path) == False:
         os.mkdir(Mix_Path)
@@ -187,6 +187,6 @@ def main():
 
                     time = np.arange(len(x_mix))/float(Samplerate)
                     times += time[-1]
-        
+
 if __name__ == '__main__':
     main()
